@@ -15,13 +15,15 @@ public class TimeServerHandler extends ChannelHandlerAdapter{
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-
         String body = (String) msg;
         System.out.println("Time Server得到了数据:" + body+";counter是:"+ ++counter);
         String currentTime = "QUERY TIME ORDER".equalsIgnoreCase(body) ? new Date().toString():"BAD ORDER";
         currentTime = currentTime + System.getProperty("line.separator");
         ByteBuf  resp = Unpooled.copiedBuffer(currentTime.getBytes());
         ctx.writeAndFlush(resp);
+        Thread.sleep(5000);
+        ByteBuf resp1 = Unpooled.copiedBuffer(currentTime.getBytes());
+        ctx.writeAndFlush(resp1);
     }
 
     @Override

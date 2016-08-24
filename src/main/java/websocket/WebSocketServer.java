@@ -18,20 +18,28 @@ import io.netty.handler.stream.ChunkedWriteHandler;
  */
 public class WebSocketServer {
     public void run(int port) throws Exception{
+        //创建两组线程，监听连接和工作
         EventLoopGroup bossGroup = new NioEventLoopGroup();
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         try{
+            //Netty用于启动Nio服务端的启动类
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup,workerGroup)
+                    //注册NioServerSocketChannel
                     .channel(NioServerSocketChannel.class)
+                     //注册处理器
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             ChannelPipeline pipeline = socketChannel.pipeline();
-                            pipeline.addLast("http-codec",new HttpServerCodec());
-                            pipeline.addLast("aggregator",new HttpObjectAggregator(65536));
-                            pipeline.addLast("http-chunked",new ChunkedWriteHandler());
-                            pipeline.addLast("handler",new WebSocketServerHandler());
+                            //用于Http请求的编码或者解码
+                            pipeline.addLast("http-codec", new HttpServerCodec());
+                            //把Http消息组成完整地HTTP消息
+                            pipeline.addLast("aggregator", new HttpObjectAggregator(65536));
+                            //向客户端发送HTML5文件
+                            pipeline.addLast("http-chunked", new ChunkedWriteHandler());
+                            //实际处理的Handler
+                            pipeline.addLast("handler", new WebSocketServerHandler());
                         }
                     });
             Channel ch = b.bind(port).sync().channel();

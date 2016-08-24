@@ -5,6 +5,8 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerAdapter;
 import io.netty.channel.ChannelHandlerContext;
 
+import java.lang.ref.SoftReference;
+
 /**
  * Created by lz on 2016/8/10.
  */
@@ -20,7 +22,7 @@ public class TimeClientHandler extends ChannelHandlerAdapter {
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("发送数据");
         ByteBuf message = null;
-        for (int i = 0; i < 100; i++) {
+        for (int i = 0; i < 1; i++) {
             message = Unpooled.buffer(req.length);
             message.writeBytes(req);
             ctx.writeAndFlush(message);
