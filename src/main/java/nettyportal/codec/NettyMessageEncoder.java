@@ -3,6 +3,7 @@ package nettyportal.codec;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToByteEncoder;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import io.netty.handler.codec.MessageToMessageEncoder;
 import nettyportal.NettyMessage;
@@ -15,7 +16,7 @@ import java.util.Map;
 /**
  * Created by lz on 2016/8/24.
  */
-public final class NettyMessageEncoder extends MessageToMessageEncoder<NettyMessage> {
+public final class NettyMessageEncoder extends MessageToByteEncoder<NettyMessage> {
     MarshallingEncoder marshallingEncoder;
 
     public NettyMessageEncoder() throws IOException {
@@ -23,11 +24,9 @@ public final class NettyMessageEncoder extends MessageToMessageEncoder<NettyMess
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, NettyMessage msg, List<Object> out) throws Exception {
-        if (msg == null || msg.getHeader() == null){
+    protected void encode(ChannelHandlerContext ctx, NettyMessage msg, ByteBuf sendBuf) throws Exception {
+        if (msg == null || msg.getHeader() == null)
             throw new Exception("The encode message is null");
-        }
-        ByteBuf sendBuf = Unpooled.buffer();
         sendBuf.writeInt((msg.getHeader().getCrcCode()));
         sendBuf.writeInt((msg.getHeader().getLength()));
         sendBuf.writeLong((msg.getHeader().getSessionID()));
@@ -37,23 +36,23 @@ public final class NettyMessageEncoder extends MessageToMessageEncoder<NettyMess
         String key = null;
         byte[] keyArray = null;
         Object value = null;
-        for (Map.Entry<String,Object> param : msg.getHeader().getAttachment().entrySet()){
+        for (Map.Entry<String, Object> param : msg.getHeader().getAttachment()
+                .entrySet()) {
             key = param.getKey();
-            keyArray=key.getBytes("UTF-8");
+            keyArray = key.getBytes("UTF-8");
             sendBuf.writeInt(keyArray.length);
             sendBuf.writeBytes(keyArray);
             value = param.getValue();
-            marshallingEncoder.encode(value,sendBuf);
+            marshallingEncoder.encode(value, sendBuf);
         }
         key = null;
         keyArray = null;
         value = null;
-        if (msg.getBody() != null){
-            marshallingEncoder.encode(msg.getBody(),sendBuf);
-        }else {
+        if (msg.getBody() != null) {
+            marshallingEncoder.encode(msg.getBody(), sendBuf);
+        } else
             sendBuf.writeInt(0);
-        }
-        sendBuf.setInt(4,sendBuf.readableBytes());
+        sendBuf.setInt(4, sendBuf.readableBytes() - 8);
     }
 
 }
